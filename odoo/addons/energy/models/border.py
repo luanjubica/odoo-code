@@ -6,6 +6,5 @@ class Border(models.Model):
     _description = "Description of the Border model"
 
     name = fields.Char(string="Name", required=True)
-    direction = fields.Selection([('in', 'In'), ('out', 'Out')], 'Direction', required=True)
-    out_area = fields.Many2one('area', string='Out Area', required=True)
-    in_area = fields.Many2one('area', string='In Area', required=True)
+    first_area = fields.Many2one('area', string='First Area', required=True)
+    second_area = fields.Many2one('area', string='Second Area', required=True)

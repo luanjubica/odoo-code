@@ -53,14 +53,13 @@ class Contract(models.Model):
     profile_id = fields.Many2one('profile', string='Profile')
     period_id = fields.Many2one('period', string='Period')
     loadshape_details_ids = fields.One2many('loadshape_details', 'contract_id', string='Load Shape Details')
-    distribution_order_ids = fields.One2many('distribution.order', 'contract_id', string='Distribution Details')
     external_id = fields.Char(string='External ID')
     risk = fields.Selection([('low', 'Low'), ('medium', 'Medium'), ('high', 'High')], 'Risk')
     cai_code = fields.Char(string='CAI Code')
     contract_price_ids = fields.One2many('contract_prices', 'contract_id', string='Contract Prices')
     excel_file = fields.Binary(string="Excel File", attachment=True, help="Upload your Excel file here.")
     payment_terms_id = fields.Many2one('payment_terms', string='Payment Terms')
-
+    
     @api.onchange('start_date', 'end_date', 'period_id', 'profile_id')
     def _compute_loadshape_details(self):
         for record in self:
@@ -80,12 +79,12 @@ class Contract(models.Model):
                             'powerunit': record.powerUnit,
                             'powerfinalprice': 0,
                             'powerfinal': 0,
-                            'power': record.power
+                            'power': record.power,
+                            'delivery_point_id': record.delivery_point_id.id,
+                            'position': record.position
                         }))
 
                 self.write({'loadshape_details_ids': loadshape_details})
-
-                #record.loadshape_details_ids = loadshape_details
     
     @api.onchange('contract_price_ids', 'loadshape_details_ids', 'vat')
     def _compute_value_total(self):
@@ -137,6 +136,8 @@ class Contract(models.Model):
                 'powerfinalprice': row['powerfinalprice'],
                 'powerfinal': row['powerfinal'],
                 'power': row['power'],
+                'delivery_point_id': row['delivery_point_id'],
+                'position': self['position'],
             })
 
         # Optionally, display a success message or perform additional actions

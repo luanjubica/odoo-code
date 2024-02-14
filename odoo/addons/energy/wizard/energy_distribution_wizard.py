@@ -13,99 +13,104 @@ cached_property = {
 class EnergyDistributionWizard(models.TransientModel):
     _name = "energy.distribution.wizard"
     _description = 'Energy Distribution'
-
-    contract_id = fields.Many2one('contract', string='Contract')
-    delivery_point_id = fields.Many2one('border', string='Contract Delivery Point', readonly=1)
+    delivery_point_id = fields.Many2one('border', string='Contract Delivery Point')
     power_date = fields.Date(string='Power Date', required=True)
-    distribution_line_ids = fields.Many2many('distribution.order.line', string='Distribution Lines')
+    position = fields.Selection([
+        ('buy', 'Buy'),
+        ('sell', 'Sell'),
+    ], string='Position', required=True,default='buy')    
+    other_borders = fields.Many2many('border', string='Other Borders')
+    loadshape_details_ids_12 = fields.Many2many('loadshape_details', relation='wizard_loadshape_details_12_rel')
+    temp_contract = fields.Many2one('contract')
+    loadshape_details_ids_24 = fields.Many2many('loadshape_details',relation='wizard_loadshape_details_24_rel')
 
-    @api.onchange('power_date')
-    def _default_line_ids(self):
+    @api.onchange('other_borders')
+    def load_data(self):
         power_date = self.power_date
-        if not power_date:
-            self.distribution_line_ids = []
+        if not power_date or not self.delivery_point_id or not self.other_borders :
+            self.loadshape_details_ids_12 = []
             return
-
-        changed_power_date = self._origin.power_date
-        contract_id = self.env.context.get('active_id')
-        contract_type = self.env.context.get('contract_type')
-        # create a new transit contract if it does not exist
-        transit_contract_id = self.env["contract"].search([
-            ("is_transit", "=", True),
-            ("position", "=", contract_type),
-            ("parent_contract_id", "=", contract_id),
-            ("start_date", "=", power_date),
-        ])
-        if not transit_contract_id:
-            transit_contract_id = self.env["contract"].create({
-                "is_transit": True,
-                "position": contract_type,
-                "parent_contract_id": contract_id,
-                "start_date": power_date,
+        
+        contract_position = self.env.context.get('contract_position')
+        temp_contract = self.env["contract"].create({
+                    "name": "temp" + str(power_date),
+                    "start_date": power_date,
+                    "end_date": power_date,
+                    "delivery_point_id": self.delivery_point_id.id,
+                    "position": contract_position,
+                    'status': 'executing',
+                    'is_transit': True,
+                    'type': 'efet',
+                    'product': 'energy',
+                    'power': 0,
+                    'powerUnit': 'mwh',
+                    'timeUnit': '60',
+                    'total_contract_power': 0,
+                    'price': 0,
+                    'total_contract_value': 0,
+                    'vat': False,
+                    'total_contract_value_with_vat': 0,
+                    'risk': 'low',
+                    'cai_code': 'cai_code',
+                    'profile_id': 1,
+                    'period_id': 1
             })
-            if changed_power_date and changed_power_date != self.power_date:
-                cached_property["contract"].append(transit_contract_id.id)
-        distribution_ids = []
-        for i in range(1, 25):
-            distribution_id = self.env["distribution.order"].search([
-                ("contract_id", "=", transit_contract_id.id),
-                ("power_date", "=", power_date),
-                ("power_hour", "=", i),
-            ])
-            if not distribution_id:
-                distribution_id = self.env["distribution.order"].create({
-                    "contract_id": transit_contract_id.id,
-                    "power_date": power_date,
-                    "power_hour": i,
-                })
-                if changed_power_date and changed_power_date != self.power_date:
-                    cached_property["d_order"].append(distribution_id.id)
-            for border in self.env["border"].search([("id", "!=", self.delivery_point_id.id)]):
-                distribution_id.write({"distribution_line_ids": [(0, 0, {
-                        'contract_id': transit_contract_id.id,
-                        'delivery_point_id': border.id,
-                        'distribution_id': distribution_id.id,
-                        'power_date': self.power_date,
-                        'power_hour': i,
-                        'power': 0.0,
-                    })]})
-            distribution_ids.append(distribution_id.id)
-            if changed_power_date and changed_power_date != self.power_date:
-                cached_property["d_order_line"].append(distribution_id.id)
 
-        ids = self.env["distribution.order"].browse(distribution_ids).mapped('distribution_line_ids').ids
-        self.distribution_line_ids = [(6, 0, ids)]
+        contract_in_range = self.env["contract"].search([
+            ("is_transit", "=", False),
+            ("position", "=", contract_position),
+            ("delivery_point_id", "=", self.delivery_point_id.id),
+            ("start_date", "<=", power_date),
+        ])
+
+        total_power_hour = 0
+
+        for i in range(24):
+            total_power_hour = 0
+            for contract in contract_in_range:
+                for  line in contract.loadshape_details_ids:
+                    if line.powerdate == power_date and line.powerhour == (i+1):
+                        total_power_hour = total_power_hour + line.power
+                
+            self.env["loadshape_details"].create({
+                            'contract_id': temp_contract.id,
+                            'powerdate': power_date,
+                            'powerhour': i+1,
+                            'powerprice': temp_contract.price,
+                            'powerunit': temp_contract.powerUnit,
+                            'powerfinalprice': 0,
+                            'powerfinal': 0,
+                            'power': total_power_hour,
+                            'delivery_point_id': self.delivery_point_id.id,
+                        })
+               
+        
+        for border in self.other_borders:
+            for i in range(24):
+              self.env["loadshape_details"].create({
+                            'contract_id': temp_contract.id,
+                            'powerdate': power_date,
+                            'powerhour': i+1,
+                            'powerprice': temp_contract.price,
+                            'powerunit': temp_contract.powerUnit,
+                            'powerfinalprice': 0,
+                            'powerfinal': 0,
+                            'power': 0,
+                            'delivery_point_id':  border.id,
+                        })
+
+        self.loadshape_details_ids_12 = temp_contract.loadshape_details_ids.filtered(lambda l: l.powerhour <= 12).mapped('id')
+
+        self.loadshape_details_ids_24 = temp_contract.loadshape_details_ids.filtered(lambda l: l.powerhour > 12).mapped('id')
+        self.temp_contract = temp_contract.id
+
+    def _calc_totals(self):
+        total_power = 0
+        for line in self.loadshape_details_ids_12:
+            total_power = total_power + line.power
+        return total_power
 
     def action_distribute(self):
-        loadshape_details_ids = self.env['contract'].search([
-            ("delivery_point_id", "=", self.env.context.get('default_delivery_point_id')),
-            ("status", "=", "executing")
-        ]).mapped('loadshape_details_ids').filtered(lambda l: l.powerdate == self.power_date)
-
-        if not loadshape_details_ids:
-            raise UserError(_('There is no loadshape items planned to use for distribution on chosen date.'))
-
-        for line in self.distribution_line_ids:
-            line.power_date = self.power_date
-
-            if line.power and line.power_hour not in loadshape_details_ids.mapped("powerhour"):
-                raise UserError(
-                    _("There is no loadshape item planned to use for distribution on the chosen hour %s for this date.") % (
-                        line.power_hour))
-            available_power = sum(
-                loadshape_details_ids.filtered(lambda l: l.powerhour == line.power_hour).mapped("power"))
-            # get from line actual_power
-            distributed_power = sum(self.distribution_line_ids.filtered(lambda l: l.power_hour == line.power_hour).mapped('power'))
-            if distributed_power > available_power:
-                raise UserError(
-                    _("Distributed Power %s overpasses the available power %s for hour %s.") % (
-                        distributed_power, available_power, line.power_hour))
-
-            # delete 0 power lines - TODO
-            # self.distribution_line_ids.filtered(lambda l: not l.power).unlink()
-        # delete cached properties
-        # self.env['contract'].browse(cached_property["contract"]).unlink()
-        # self.env['contract'].browse(cached_property["d_order"]).unlink()
-        # self.env['contract'].browse(cached_property["d_order_line"]).unlink()
+        self.env['contract'].search([('id', '=', self.temp_contract.id)]).write({'status': 'executed'})
         return {'type': 'ir.actions.act_window_close'}
 

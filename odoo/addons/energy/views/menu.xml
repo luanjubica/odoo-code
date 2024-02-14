@@ -18,7 +18,11 @@
                   name="Purchase Distribution" action="action_purchase_distribution" parent="menu_distribution"/>
         <menuitem id="menu_distribution_order_lines" sequence="3"
                   name="Distribution Details" action="action_distribution_order_lines" parent="menu_distribution"/>
-
+                            
+        <menuitem id="menu_distribution__buy" sequence="34"
+                  name="Distribution Energy Buy" action="action_wizard_energy_distribution" 
+                          parent="menu_distribution" />
+                
         <!-- Create a Submenu under the Parent "Settings" Menu -->
         <menuitem id="menu_settings" sequence="100" name="Settings" parent="menu_energy_trading"/>
         <menuitem id="menu_period" sequence="1" name="Period" parent="menu_settings" action="action_period"/>

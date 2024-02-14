@@ -5,26 +5,41 @@
             <field name="name">Distribute Energy</field>
             <field name="model">energy.distribution.wizard</field>
             <field name="arch" type="xml">
-                <form string="Distribute Energy">
+                <form string="Distribute Energy Buy">
                     <group>
-                        <field name="contract_id" invisible="1"/>
                         <field name="delivery_point_id"/>
                         <field name="power_date"/>
+                        <field name="position"/>
+                        <field name="other_borders" widget="many2many_checkboxes"/>
                         <field
-                            name="distribution_line_ids"
-                            widget="x2many_2d_matrix"
+                            name="loadshape_details_ids_12" widget="x2many_2d_matrix"
                             field_x_axis="delivery_point_id"
-                            field_y_axis="power_hour"
-                            field_value="power">
-                            <tree editable="bottom">
+                            field_y_axis="powerhour"
+                            field_value="power"  pager="True"
+                            >
+                            <tree editable="top">
                                 <field name="delivery_point_id" />
-                                <field name="power_hour" />
+                                <field name="powerhour"  />
                                 <field name="power" />
                             </tree>
+                            
                         </field>
-
+                        <field
+                            name="loadshape_details_ids_24" widget="x2many_2d_matrix"
+                            field_x_axis="delivery_point_id"
+                            field_y_axis="powerhour"
+                            field_value="power"  pager="True"
+                            >
+                            <tree editable="top">
+                                <field name="delivery_point_id" />
+                                <field name="powerhour"  />
+                                <field name="power" />
+                            </tree>
+                            
+                        </field>
                     </group>
                     <footer>
+                        <button name="load_data" string="Load Data" type="object" class="btn-primary" />
                         <button name="action_distribute" string="Distribute" type="object" class="btn-primary" data-hotkey="q"/>
                         <button special="cancel" data-hotkey="z" string="Cancel" type="object" class="btn-secondary"/>
                     </footer>
@@ -38,6 +53,7 @@
             <field name="res_model">energy.distribution.wizard</field>
             <field name="view_mode">form</field>
             <field name="target">new</field>
+            <field name="context">{'contract_position': 'buy'}</field>
         </record>
 
     </data>

@@ -14,3 +14,10 @@ class LoadShapeDetails(models.Model):
     powerunit = fields.Char(string='Power Unit')
     powerfinalprice = fields.Float(string='Power Final Price')
     powerfinal = fields.Float(string='Power Final')
+    delivery_point_id = fields.Many2one('border', string='Delivery Point')
+    position = fields.Selection([
+        ('buy', 'Buy'),
+        ('sell', 'Sell'),
+    ], string='Position', default='buy')
+
+    

@@ -15,7 +15,6 @@
                     <button string="Distribute Energy" type="action"
                             name="%(action_wizard_energy_distribution)d"
                             attrs="{'invisible': ['|', ('is_transit', '=', True), ('status', '!=', 'executing')]}"
-                            context="{'default_contract_id': id, 'default_delivery_point_id': delivery_point_id, 'contract_type': position}"
                             class="oe_highlight"/>
                     <field name="status" widget="statusbar" options="{'clickable': '1'}" statusbar_visible="initial,executing,finished"/>
                 </header>
@@ -41,18 +40,18 @@
                                 <field name="category"/>
                                 <field name="type"/>
                                 <field name="position"/>
-                                <field name="master_contract_id" attrs="{'invisible': [('is_transit', '!=', False)]}"/>
+                                <field name="master_contract_id" />
                                 <field name="parent_contract_id" attrs="{'invisible': [('is_transit', '=', False)]}"/>
                             </group>
                             <group>
                                 <field name="name"/>
                                 <field name="is_transit"/>
                                 <field name="start_date"/>
-                                <field name="end_date" attrs="{'invisible': [('is_transit', '!=', False)]}"/>
+                                <field name="end_date" />
                             </group>
                         </group>
                         <notebook>
-                            <page string="Power and Value" attrs="{'invisible': [('is_transit', '!=', False)]}">
+                            <page string="Power and Value" >
                                 <group col="2">
                                     <group>
                                        <field name="power" string="Power Per Time/Unit"/>
@@ -67,14 +66,14 @@
                                     </group>
                                 </group>
                             </page>
-                            <page string="Delivery" attrs="{'invisible': [('is_transit', '!=', False)]}">
+                            <page string="Delivery" >
                                 <group>
                                     <field name="delivery_point_id"
                                            attrs="{'required': [('is_transit', '=', False)]}"
                                            string="Delivery Point"/>
                                 </group>
                             </page>
-                            <page string="Price" attrs="{'invisible': [('is_transit', '!=', False)]}">
+                            <page string="Price" >
                                 <group>
                                     <field name="price" string="Price per time unit "  />
                                 </group>
@@ -86,7 +85,7 @@
                                 </tree>
                                 </field>
                             </page>
-                            <page string="LoadShape" attrs="{'invisible': [('is_transit', '!=', False)]}">
+                            <page string="LoadShape" >
                                 <group col="2">
                                  <group>
                                     <field name="profile_id" string="Profile"/>
@@ -98,6 +97,7 @@
                                 </group>
                                 <field name="loadshape_details_ids" >
                                     <tree  >
+                                    <field name="delivery_point_id"/>
                                     <field name="powerdate"/>
                                     <field name="powerhour"/>
                                     <field name="power" sum="power_total"/>
@@ -106,23 +106,7 @@
                                 </field>
                             </page>
                             <page string="Distributions" attrs="{'invisible': [('is_transit', '=', False)]}">
-                                <field name="distribution_order_ids" widget="one2many">
-                                    <tree>
-                                        <field name="power_date"/>
-                                        <field name="power_hour"/>
-                                        <field name="total_power" sum="total_power"/>
-                                        <field name="distributed_power" sum="distributed_power"/>
-                                        <field name="actual_power" sum="actual_power"/>
-                                        <field name="distribution_line_ids" string="Distributions"  mode="tree"
-                                               widget="many2many_tags" options="{'no_create': True}" >
-                                            <tree>
-                                                <field name="power_hour"/>
-                                                <field name="delivery_point_id"/>
-                                                <field name="power"/>
-                                            </tree>
-                                        </field>
-                                    </tree>
-                                </field>
+                               
                             </page>
                             <page string="Payment Terms" attrs="{'invisible': [('is_transit', '!=', False)]}">
                                 <group>

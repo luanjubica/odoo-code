@@ -9,9 +9,8 @@
                 <form string="Border">
                     <group>
                         <field name="name" string="Name"/>
-                        <field name="direction" string="Direction"/>
-                        <field name="in_area" string="In Area"/>
-                        <field name="out_area" string="Out Area"/>
+                        <field name="first_area" string="First Area"/>
+                        <field name="second_area" string="Second Area"/>
                     </group>
                 </form>
             </field>
@@ -24,9 +23,8 @@
             <field name="arch" type="xml">
                 <tree>
                     <field name="name"/>
-                    <field name="direction" string="Direction"/>
-                    <field name="in_area" string="In Area"/>
-                    <field name="out_area" string="Out Area"/>
+                    <field name="first_area" string="First Area"/>
+                    <field name="second_area" string="Second Area"/>
                 </tree>
             </field>
         </record>
@@ -38,9 +36,8 @@
             <field name="arch" type="xml">
                 <search>
                     <field name="name" string="Name"/>
-                    <field name="direction" string="Direction"/>
-                    <field name="in_area" string="In Area"/>
-                    <field name="out_area" string="Out Area"/>
+                    <field name="first_area" string="First Area"/>
+                    <field name="second_area" string="Second Area"/>
  
                 </search>
             </field>

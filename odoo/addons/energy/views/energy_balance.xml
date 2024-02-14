@@ -1,0 +1,18 @@
+<!-- In your custom module's views folder, update the energy_balance_views.xml file -->
+
+<odoo>
+    <record id="view_energy_balance_pivot" model="ir.ui.view">
+        <field name="name">energy.balance.pivot</field>
+        <field name="model">energy.balance</field>
+        <field name="arch" type="xml">
+            <pivot>
+                <field name="delivery_point_id" type="row"/>
+                <field name="date" type="col"/>
+                <field name="hour" type="col"/>
+                <field name="energy_balance" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- ... (rest of the XML definitions remain the same) -->
+</odoo>
